@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import  render, redirect
 from .forms import NewUserForm, PassManForm
 from django.contrib.auth import login as auth_login, authenticate
@@ -5,7 +6,11 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from .models import PassMan
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from .generate_pass import generate_password
+from django.contrib.auth.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 def index(request):
@@ -47,6 +52,26 @@ def register(request):
 def main(request):
     return render(request=request, template_name="app/main.html", context={})
 
+def generate_pass(request):
+    generated_pass = generate_password();
+    return JsonResponse({'generated_pass': generated_pass})
+
+def delete_pass(request):
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    logger.error(body)
+    try:
+        password = PassMan.objects.get(website=body["website"],
+                       email=body["username"],
+                       password=body["password"],
+                       user=User(body["user_id"])
+                       )
+        password.delete()
+    except PassMan.DoesNotExist:
+        logger.error(f"Does not exist\n{body}")
+    message_OK = 'Deleted'
+    return JsonResponse({'message': message_OK})
+    
 def get_password(request):
     if request.user.is_authenticated:
         passwords = PassMan.objects.filter(user=request.user.id)
@@ -59,14 +84,21 @@ def get_password(request):
         return redirect("index")
 
 def save_password(request):
-    if request.POST:
-        form = PassManForm(request.POST)
-        if form.is_valid():
-            password = form.save()
-            messages.success(request, "Password successfully saved.")
-    form = PassManForm()
-    return render(request=request, template_name="app/main.html", context={"save_form":form})
-    
-            
-        
-    
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    logger.error(body)
+    # password = PassMan(website = request.POST['website'],
+    #         username = request.POST['username'],
+    #         password = request.POST['password'],
+    #         user = request.POST['user_id']
+    # )
+    new_password = PassMan(website=body["website"],
+                       email=body["username"],
+                       password=body["password"],
+                       user=User(body["user_id"])
+                       )
+    new_password.save()
+    messages.success(request, "Password successfully saved.")
+    message_OK = 'Saved'
+    return JsonResponse({'message': message_OK})
+    return render(request=request, template_name="app/main.html", context={})

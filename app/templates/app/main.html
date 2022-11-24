@@ -11,7 +11,7 @@
     </figure>
 
     <h1 class="dashboard__heading">
-        Welcome, <span class="dashboard__user--name">{{user}}</span>
+        Welcome, <span class="dashboard__user--name">{{user}} {{user.id|json_script:"user_id"}}</span>
     </h1>
 
     <div class="dashboard__main">
@@ -39,7 +39,9 @@
                 </form>
             </div>
             <div class="hide dashboard__view--password">
-
+                <form method="POST">
+                    {% csrf_token %}
+                </form>
                 <table class="password--table">
                     <tr>
                         <th>Website</th>

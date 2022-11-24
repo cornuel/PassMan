@@ -21,7 +21,7 @@ if (window.history.replaceState) {
 generate_button.addEventListener('click', async function (e) {
     let data = await fetch('/gen_pass')
     data = await data.json()
-    password_field.value = data['password']
+    password_field.value = data["generated_pass"]
 })
 
 savepass_form.addEventListener('submit', async function (e) {
@@ -30,48 +30,52 @@ savepass_form.addEventListener('submit', async function (e) {
     let website_name = document.querySelector('.gen--website');
     let user_name = document.querySelector('.gen--username');
     let generated_password = document.querySelector('.gen--pass');
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const user_id = JSON.parse(document.getElementById('user_id').textContent);
 
-    let formData = new FormData();
-    formData.append(message).value;
-    formData.append(website_name).value;
-    formData.append(user_name).value;
+    // let formData = new FormData();
+    // formData.append(message).value;
+    // formData.append(website_name).value;
+    // formData.append(user_name).value;
 
-    const request = new Request('{% url "save_pass" %}', {method: 'POST', body: formData});
+    // const request = new Request('{% url "save_pass" %}', {method: 'POST', body: formData});
 
-    fetch(request)
-    .then(response => response.json())
-    .then(result => {
-        console.log(result);
-    })
+    // fetch(request)
+    // .then(response => response.json())
+    // .then(result => {
+    //     console.log(result);
+    // })
 
     data = await fetch('/save_pass', {
         method: "POST",
         body: JSON.stringify(
             {
-                'user': session_username,
+                'user_id': user_id,
                 'website': website_name.value,
                 'username': user_name.value,
                 'password': generated_password.value,
             }
         ),
         headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRFToken": csrftoken
         }
     })
 
-    data = await data.json()
 
-    if (data['message'] == 'Saved') {
-        [website_name, user_name, generated_password].forEach(input => input.value = null)
-        message.textContent = "Password Saved Succesfully"
-        setTimeout(() => message.textContent = '', 3000)
-    } else if (data['message'] == 'Exists') {
-        message.textContent = "Account for website with this username already exists."
-        setTimeout(() => message.textContent = '', 3000)
-    } else {
-        message.textContent = "There was an Error"
-        setTimeout(() => message.textContent = '', 3000)
-    }
+    // data = await data.json()
+
+    // if (data['message'] == 'Saved') {
+    //     [website_name, user_name, generated_password].forEach(input => input.value = null)
+    //     message.textContent = "Password Saved Succesfully"
+    //     setTimeout(() => message.textContent = '', 3000)
+    // } else if (data['message'] == 'Exists') {
+    //     message.textContent = "Account for website with this username already exists."
+    //     setTimeout(() => message.textContent = '', 3000)
+    // } else {
+    //     message.textContent = "There was an Error"
+    //     setTimeout(() => message.textContent = '', 3000)
+    // }
 
 })
 
@@ -91,21 +95,32 @@ const deletePassword = async function (e) {
     if (!e.target.classList.contains('delete_password')) return
     const table_row = e.target.closest('tr');
     const data = {
+        "user_id": JSON.parse(document.getElementById('user_id').textContent),
         "website": table_row.querySelector('.website--js').textContent,
-        "email": table_row.querySelector('.username--js').textContent,
+        "username": table_row.querySelector('.username--js').textContent,
         "password": table_row.querySelector('.password--js').textContent,
     }
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     let response = await fetch('/del_pass', {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRFToken": csrftoken
         }
     })
     response = await response.json()
     if (response.message == "OK") {
         table_row.parentNode.removeChild(table_row)
     }
+    data = await fetch("/get_pass")
+    data = await data.json()
+    // TODO : this refresh doesnt work
+    // have to press Show to delete the password -> not good
+    // add try except to views
+    // add control over what's inputed -> does website exists with given username etc
+    addDataToTable(data, table);
+
 }
 
 /// SHOW PASSWORD
@@ -182,7 +197,7 @@ table_two.addEventListener('click', async (e) => {
         data = await fetch(`/search_pass`, {
             method: "POST",
             body: JSON.stringify({
-                'username': session_username,
+                'username': user,
                 'website': search_string.toLowerCase(),
             }),
             headers: {
