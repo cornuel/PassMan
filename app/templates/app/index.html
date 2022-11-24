@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block contents %}
+
+<body>
+    <nav class="nav">
+        <figure class="nav__logo">
+            <a href="#">
+                <img src="{% static 'app/images/logo2.png' %}" alt="E Vault Logo" />
+            </a>
+        </figure>
+        <div class="nav__buttons">
+            <a href="{% url 'login_page' %}" class="nav__login">log in</a>
+            <a href="{% url 'register_page' %}" class="nav__register">register</a>
+        </div>
+    </nav>
+    <main class="main">
+        <figure class="main__image">
+            <img src="{% static 'app/images/header.jpg' %}" alt="/">
+        </figure>
+        <div class="main__wrapper">
+            <p class="main__paragraph">
+                Have trouble remembering your passwords?
+                Need strong passwords for your accounts?
+                We at <span>E vault</span> have got you covered! All your passwords at one place.
+                So what are you waiting for?
+            </p>
+            <div class="main__button">
+                <a href="{% url 'register_page' %}" class="nav__register">register now</a>
+            </div>
+        </div>
+    </main>
+</body>
+{% endblock contents %}
