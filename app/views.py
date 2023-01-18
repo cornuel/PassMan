@@ -63,14 +63,13 @@ def delete_pass(request):
     try:
         password = PassMan.objects.get(website=body["website"],
                        email=body["username"],
-                       password=body["password"],
                        user=User(body["user_id"])
                        )
         password.delete()
+        return JsonResponse({'message': 'OK'})
     except PassMan.DoesNotExist:
         logger.error(f"Does not exist\n{body}")
-    message_OK = 'Deleted'
-    return JsonResponse({'message': message_OK})
+    return JsonResponse({'message': 'KO'})
     
 def get_password(request):
     if request.user.is_authenticated:
@@ -87,18 +86,23 @@ def save_password(request):
     body_unicode = request.body.decode('utf-8')
     body = json.loads(body_unicode)
     logger.error(body)
-    # password = PassMan(website = request.POST['website'],
-    #         username = request.POST['username'],
-    #         password = request.POST['password'],
-    #         user = request.POST['user_id']
-    # )
-    new_password = PassMan(website=body["website"],
-                       email=body["username"],
-                       password=body["password"],
-                       user=User(body["user_id"])
-                       )
-    new_password.save()
+    params = {
+        "website":body["website"],
+        "email":body["username"],
+        "password":body["password"],
+        "user":User(request.user.id)
+    }
+    sameWebsiteObjects = PassMan.objects.filter(website=params["website"])
+    if sameWebsiteObjects.count() >= 1:
+        sameEmailObjects = sameWebsiteObjects.filter(email=params["email"])
+        if sameEmailObjects.count() >= 1:
+            return JsonResponse({'message': 'Exists'})
+        else:
+            new_password = PassMan(**params)
+            new_password.save()
+    else:
+        new_password = PassMan(**params)
+        new_password.save()
+    
     messages.success(request, "Password successfully saved.")
-    message_OK = 'Saved'
-    return JsonResponse({'message': message_OK})
-    return render(request=request, template_name="app/main.html", context={})
+    return JsonResponse({'message': 'Saved'})

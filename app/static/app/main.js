@@ -31,7 +31,6 @@ savepass_form.addEventListener('submit', async function (e) {
     let user_name = document.querySelector('.gen--username');
     let generated_password = document.querySelector('.gen--pass');
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const user_id = JSON.parse(document.getElementById('user_id').textContent);
 
     // let formData = new FormData();
     // formData.append(message).value;
@@ -50,7 +49,6 @@ savepass_form.addEventListener('submit', async function (e) {
         method: "POST",
         body: JSON.stringify(
             {
-                'user_id': user_id,
                 'website': website_name.value,
                 'username': user_name.value,
                 'password': generated_password.value,
@@ -63,19 +61,24 @@ savepass_form.addEventListener('submit', async function (e) {
     })
 
 
-    // data = await data.json()
+    data = await data.json()
 
-    // if (data['message'] == 'Saved') {
-    //     [website_name, user_name, generated_password].forEach(input => input.value = null)
-    //     message.textContent = "Password Saved Succesfully"
-    //     setTimeout(() => message.textContent = '', 3000)
-    // } else if (data['message'] == 'Exists') {
-    //     message.textContent = "Account for website with this username already exists."
-    //     setTimeout(() => message.textContent = '', 3000)
-    // } else {
-    //     message.textContent = "There was an Error"
-    //     setTimeout(() => message.textContent = '', 3000)
-    // }
+    console.log("data = " + data['message'])
+
+    if (data['message'] == 'Saved') {
+        console.log("if 'Saved'")
+        website_name.value = null
+        user_name.value = null
+        generated_password.value = null
+        message.textContent = "Password Saved Succesfully"
+        setTimeout(() => message.textContent = '', 3000)
+    } else if (data['message'] == 'Exists') {
+        message.textContent = "Account for website with this username already exists."
+        setTimeout(() => message.textContent = '', 3000)
+    } else {
+        message.textContent = "There was an Error"
+        setTimeout(() => message.textContent = '', 3000)
+    }
 
 })
 
@@ -98,7 +101,6 @@ const deletePassword = async function (e) {
         "user_id": JSON.parse(document.getElementById('user_id').textContent),
         "website": table_row.querySelector('.website--js').textContent,
         "username": table_row.querySelector('.username--js').textContent,
-        "password": table_row.querySelector('.password--js').textContent,
     }
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     let response = await fetch('/del_pass', {
@@ -113,13 +115,10 @@ const deletePassword = async function (e) {
     if (response.message == "OK") {
         table_row.parentNode.removeChild(table_row)
     }
-    data = await fetch("/get_pass")
-    data = await data.json()
-    // TODO : this refresh doesnt work
+    // TODO : delete actual line of password after click -> OK
     // have to press Show to delete the password -> not good
     // add try except to views
     // add control over what's inputed -> does website exists with given username etc
-    addDataToTable(data, table);
 
 }
 
@@ -127,22 +126,24 @@ const deletePassword = async function (e) {
 const showPassword = async function (e) {
     if (!e.target.classList.contains('show_password')) return
     const table_row = e.target.closest('tr');
+    const hidden_pass = "******************"
 
-    if (table_row.querySelector('.password--js').textContent === "*****"){
+    if (table_row.querySelector('.password--js').textContent === hidden_pass){
         let data;
         data = await fetch("/get_pass")
         data = await data.json()
     
         let passwords = data['passwords']
         passwords.forEach(password => {
-            if (password.website === table_row.querySelector('.website--js').textContent){
+            if (password.website === table_row.querySelector('.website--js').textContent
+                && password.email === table_row.querySelector('.username--js').textContent){
                 table_row.querySelector('.password--js').textContent = password.password;
                 table_row.querySelector('.show_password').textContent = "Hide"
             }
         })
     }
     else{
-        table_row.querySelector('.password--js').textContent = "*****";
+        table_row.querySelector('.password--js').textContent = hidden_pass
         table_row.querySelector('.show_password').textContent = "Show"
     }
 }
@@ -150,12 +151,13 @@ const showPassword = async function (e) {
 // ADD PASSWORDS DATA TO TABLE
 const addDataToTable = function (data, table) {
     let passwords = data['passwords']
+    const hidden_pass = "******************"
     passwords.forEach(password => {
         const table_row = `
                 <tr>
                     <td class="website--js">${password.website}</td>
                         <td class="username--js">${password.email}</td>
-                        <td class="password--js">*****</td>
+                        <td class="password--js">${hidden_pass}</td>
                         <td>
                             <button class="show_password" type="submit">Show</button>
                         </td>
@@ -171,15 +173,15 @@ const addDataToTable = function (data, table) {
 viewPassBtn.addEventListener('click', async function () {
     if (this.classList.contains('active')) return;
     table.innerHTML = null;
-    let table_headers = `
-            <tr>
-                <th>Website</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Show</th>
-                <th>Delete</th>
-            </tr>
-            `
+    let table_headers = ""
+    //         `<tr>
+    //             <th>Website</th>
+    //             <th>Username</th>
+    //             <th>Password</th>
+    //             <th>Show</th>
+    //             <th>Delete</th>
+    //         </tr>
+    //         `
     table.insertAdjacentHTML('beforeend', table_headers)
     resetDashboard()
     viewPassDiv.classList.remove('hide')
