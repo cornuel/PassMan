@@ -5,7 +5,7 @@
 
 <body class="dashboard">
     <figure class="dashboard__logo">
-        <a href="url_for('home')">
+        <a href="{% url 'main_page' %}">
             <img src="{% static 'app/images/logo2.png' %}" alt="E vault logo">
         </a>
     </figure>
@@ -22,9 +22,9 @@
                 <li class="dashboard__button btn--three">Search Password</li>
             </ul>
 
-            <form action="/logout.py" class="log__out">
-                <button type="submit" class="nav__login">Log Out</button>
-            </form>
+            <div class="log__out">
+                <a href="{% url 'logout_page' %}" class="nav__login">Log Out</a>
+            </div>
         </div>
         <div class="dashboard__main--right">
             <div class="dashboard__generate--password">

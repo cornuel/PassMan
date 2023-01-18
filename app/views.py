@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import  render, redirect
 from .forms import NewUserForm, PassManForm
-from django.contrib.auth import login as auth_login, authenticate
+from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from .models import PassMan
@@ -37,6 +37,11 @@ def login(request):
             messages.error(request,"Invalid username or password.")
     return render(request=request, template_name="app/login.html", context={"login_form":form, "errors":errors})
 
+def logout(request):
+    auth_logout(request)
+    messages.success(request, "Successfully logged out")
+    return redirect('index')
+
 def register(request):
     if request.method == "POST":
         form = NewUserForm(request.POST)
@@ -44,7 +49,7 @@ def register(request):
             user = form.save()
             auth_login(request, user)
             messages.success(request, "Registration successful." )
-            return redirect("index")
+            return redirect("login_page")
         messages.error(request, "Unsuccessful registration. Invalid information.")
     form = NewUserForm()
     return render (request=request, template_name="app/register.html", context={"register_form":form})
