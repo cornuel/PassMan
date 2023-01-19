@@ -32,19 +32,6 @@ savepass_form.addEventListener('submit', async function (e) {
     let generated_password = document.querySelector('.gen--pass');
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    // let formData = new FormData();
-    // formData.append(message).value;
-    // formData.append(website_name).value;
-    // formData.append(user_name).value;
-
-    // const request = new Request('{% url "save_pass" %}', {method: 'POST', body: formData});
-
-    // fetch(request)
-    // .then(response => response.json())
-    // .then(result => {
-    //     console.log(result);
-    // })
-
     data = await fetch('/save_pass', {
         method: "POST",
         body: JSON.stringify(
@@ -115,10 +102,6 @@ const deletePassword = async function (e) {
     if (response.message == "OK") {
         table_row.parentNode.removeChild(table_row)
     }
-    // TODO : delete actual line of password after click -> OK
-    // have to press Show to delete the password -> not good
-    // add try except to views
-    // add control over what's inputed -> does website exists with given username etc
 
 }
 
